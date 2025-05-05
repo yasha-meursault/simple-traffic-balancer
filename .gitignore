@@ -1,0 +1,34 @@
+# Visual Studio files
+*.sln
+*.vcxproj*
+*.user
+*.filters
+*.obj
+*.log
+*.pch
+*.idb
+*.ipch
+*.aps
+*.ncb
+*.tlog
+*.vc.db
+*.exe
+*.dll
+*.lib
+*.pdb
+
+# Build folders
+Debug/
+Release/
+x64/
+ipch/
+.vscode/
+build/
+bin/
+
+# System files
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
