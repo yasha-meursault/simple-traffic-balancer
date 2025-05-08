@@ -1,17 +1,18 @@
+# Компилятор и флаги
 CXX = g++
-CXXFLAGS = -std=c++17 -O2 -pthread
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 
-SRCS = main.cpp listener.cpp balancer.cpp registry.cpp health.cpp
-OBJS = $(SRCS:.cpp=.o)
+# Главный исходный файл
+SRC = main.cpp
+OBJ = $(SRC:.cpp=.o)
 
-balancer: $(OBJS)
-	$(CXX) $^ -o $@ $(CXXFLAGS)
+# Цель по умолчанию
+all: balancer
 
-servers/srv%: servers/srv%.cpp
-	$(CXX) $< -o $@ $(CXXFLAGS)
+# Правила сборки
+balancer: $(OBJ)
+	$(CXX) $(CXXFLAGS) -o balancer $(OBJ)
 
-.PHONY: all clean
-all: balancer servers/srv1 servers/srv2 servers/srv3 servers/srv4 servers/srv5
-
+# Очистка
 clean:
-	rm -f *.o balancer servers/srv*
+	rm -f *.o balancer
