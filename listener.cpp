@@ -1,59 +1,76 @@
-﻿#include "httplib.h" // скопировал с гитхаба :)
+﻿#include "httplib.h"
 #include "listener.hpp"
+#include "balancer.hpp"
+#include "registry.hpp"
 #include <iostream>
+#include <memory>
 
-void run_listener()
-{
-	httplib::Server server;
+Balancer globalBalancer(Balancer::Algo::RoundRobin); // Global balancer
 
-	auto handler = [](const httplib::Request &req, httplib::Response &res)
-	{
-		std::cout << req.method << " " << req.path << std::endl; // для отладки
+void run_listener() {
+    httplib::Server server;
 
-		auto pos = req.path.find('/', 1);
-		if (pos == std::string::npos)
-		{
-			res.status = 400;
-			res.set_content("Bad request", "text/plain");
-			return;
-		}
+    auto handler = [](const httplib::Request &req, httplib::Response &res) {
+        std::cout << req.method << " " << req.path << std::endl;
 
-		std::string service = req.path.substr(1, pos - 1);
-		std::string path = req.path.substr(pos);
+        auto pos = req.path.find('/', 1);
+        if (pos == std::string::npos) {
+            res.status = 400;
+            res.set_content("Bad request", "text/plain");
+            return;
+        }
 
-		httplib::Client client("127.0.0.1", 8081);
-		//****************************************************
-		//*                                                  *
-		//* ВАЖНО! ИДЕТ НА localhost:8081, ЕСЛИ ЧТО ПОМЕНЯЕМ *
-		//*                                                  *
-		//****************************************************
+        std::string service = req.path.substr(1, pos - 1);
+        std::string path = req.path.substr(pos);
 
-		std::shared_ptr<httplib::Response> response;
+        Endpoint ep;
+        try {
+            ep = globalBalancer.selectEndpoint(service);
+            std::cout << "Selected backend: " << ep.host << ":" << ep.port << std::endl;
+        } catch (const std::exception& e) {
+            res.status = 503;
+            res.set_content("No healthy backends available", "text/plain");
+            return;
+        }
 
-		if (req.method == "GET")
-			auto response = client.Get(path.c_str());
-		else if (req.method == "POST")
-			auto response = client.Post(path.c_str(), req.body, "text/plain");
-		else if (req.method == "PUT")
-			auto response = client.Put(path.c_str(), req.body, "text/plain");
-		else if (req.method == "PATCH")
-			auto response = client.Patch(path.c_str(), req.body, "text/plain");
-		else if (req.method == "DELETE")
-			auto response = client.Delete(path.c_str());
-		else
-		{
-			res.status = 502;
-			res.set_content("Failed to connect to backend", "text/plain");
-		}
-	};
+        httplib::Client client(ep.host, ep.port);
+        httplib::Result response;
 
-	// обработчик методов
-	server.Get(R"(/.*)", handler);
-	server.Post(R"(/.*)", handler);
-	server.Put(R"(/.*)", handler);
-	server.Patch(R"(/.*)", handler);
-	server.Delete(R"(/.*)", handler);
+        if (req.method == "GET")
+            response = client.Get(path.c_str());
+        else if (req.method == "POST")
+            response = client.Post(path.c_str(), req.body, "text/plain");
+        else if (req.method == "PUT")
+            response = client.Put(path.c_str(), req.body, "text/plain");
+        else if (req.method == "PATCH")
+            response = client.Patch(path.c_str(), req.body, "text/plain");
+        else if (req.method == "DELETE")
+            response = client.Delete(path.c_str());
+        else {
+            res.status = 405;
+            res.set_content("Method Not Allowed", "text/plain");
+            return;
+        }
 
-	std::cout << "Listener started on http://127.0.0.1:8080" << std::endl;
-	server.listen("127.0.0.1", 8080);
+        if (response) {
+            res.status = response->status;
+            res.set_content(response->body, "text/plain");
+        } else {
+            res.status = 502;
+            res.set_content("Failed to connect to backend", "text/plain");
+        }
+    };
+
+    server.Get(R"(/.*)", handler);
+    server.Post(R"(/.*)", handler);
+    server.Put(R"(/.*)", handler);
+    server.Patch(R"(/.*)", handler);
+    server.Delete(R"(/.*)", handler);
+
+    std::cout << "Listener started on http://127.0.0.1:8080" << std::endl;
+    server.listen("127.0.0.1", 8080);
+}
+
+Listener::Listener(const std::string &address) {
+    run_listener();
 }

@@ -18,6 +18,7 @@
 *.pdb
 
 # Build folders
+.vscode/
 Debug/
 Release/
 x64/

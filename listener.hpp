@@ -3,13 +3,11 @@
 
 #include <string>
 
-// Declare the Listener class and its methods
+void run_listener();
+
 class Listener {
 public:
-    Listener(const std::string& address);
-
-private:
-    std::string address;
+    Listener(const std::string& address = "127.0.0.1");
 };
 
 #endif // LISTENER_HPP
