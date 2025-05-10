@@ -1,0 +1,22 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build balancer",
+      "type": "shell",
+      "command": "cl",
+      "args": [
+        "/EHsc",
+        "src\\main.cpp",
+        "src\\balancer.cpp",
+        "src\\registry.cpp",
+        "src\\http_listener.cpp"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": ["$msCompile"]
+    }
+  ]
+}

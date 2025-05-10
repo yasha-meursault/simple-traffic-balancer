@@ -22,7 +22,6 @@ Debug/
 Release/
 x64/
 ipch/
-.vscode/
 build/
 bin/
 
