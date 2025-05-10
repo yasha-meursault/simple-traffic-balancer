@@ -1,14 +1,18 @@
 ﻿#include "httplib.h" // скопировал с гитхаба :)
+#include "listener.hpp"
 #include <iostream>
 
-void run_listener() {
+void run_listener()
+{
 	httplib::Server server;
-	
-	auto handler = [](const httplib::Request& req, httplib::Response& res) {
-		std::cout << req.method << " " << req.path << std::endl; // для отладки 
+
+	auto handler = [](const httplib::Request &req, httplib::Response &res)
+	{
+		std::cout << req.method << " " << req.path << std::endl; // для отладки
 
 		auto pos = req.path.find('/', 1);
-		if (pos == std::string::npos) {
+		if (pos == std::string::npos)
+		{
 			res.status = 400;
 			res.set_content("Bad request", "text/plain");
 			return;
@@ -36,13 +40,14 @@ void run_listener() {
 			auto response = client.Patch(path.c_str(), req.body, "text/plain");
 		else if (req.method == "DELETE")
 			auto response = client.Delete(path.c_str());
-		else {
+		else
+		{
 			res.status = 502;
 			res.set_content("Failed to connect to backend", "text/plain");
 		}
-		};
+	};
 
-		// обработчик методов
+	// обработчик методов
 	server.Get(R"(/.*)", handler);
 	server.Post(R"(/.*)", handler);
 	server.Put(R"(/.*)", handler);

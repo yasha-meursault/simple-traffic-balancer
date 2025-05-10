@@ -1,18 +1,18 @@
-# Компилятор и флаги
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O2
+CXXFLAGS = -std=c++17 -Wall -pthread
+LDFLAGS =
 
-# Главный исходный файл
-SRC = main.cpp
+SRC = main.cpp registry.cpp balancer.cpp listener.cpp
 OBJ = $(SRC:.cpp=.o)
+TARGET = balancer
 
-# Цель по умолчанию
-all: balancer
+all: $(TARGET)
 
-# Правила сборки
-balancer: $(OBJ)
-	$(CXX) $(CXXFLAGS) -o balancer $(OBJ)
+$(TARGET): $(OBJ)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Очистка
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $<
+
 clean:
-	rm -f *.o balancer
+	rm -f $(OBJ) $(TARGET)
